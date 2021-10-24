@@ -12,8 +12,8 @@ contract MerkleAirdrop is Ownable {
     SmolBrain public smolBrain;
     Land public land;
 
-    function mintSmolBrainAndLand(bytes32[] memory proof, uint256 _landId, uint256 _smolBrainId) public {
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender, _landId, _smolBrainId));
+    function mintSmolBrainAndLand(bytes32[] memory proof, uint256 _smolBrainId, uint256 _landId) public {
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender, _smolBrainId, _landId));
         require(MerkleProof.verify(proof, merkleRoot, leaf), "MerkleAirdrop: proof invalid");
 
         smolBrain.mint(msg.sender, _smolBrainId);
