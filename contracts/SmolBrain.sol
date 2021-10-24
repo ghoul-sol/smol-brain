@@ -5,14 +5,19 @@ import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
+import '@openzeppelin/contracts/utils/Counters.sol';
 import './School.sol';
 import './Land.sol';
 
 contract SmolBrain is Ownable, ERC721Enumerable {
     using Strings for uint256;
+    using Counters for Counters.Counter;
+
+    Counters.Counter private _tokenIdTracker;
+    string public baseURI;
 
     /// @dev 18 decimals
-    uint256 public landMaxLevel;
+    uint256 public brainMaxLevel;
     /// @dev 18 decimals
     uint256 public levelIQCost;
 
@@ -26,7 +31,7 @@ contract SmolBrain is Ownable, ERC721Enumerable {
     event MerkleAirdropSet(address merkleAirdrop);
     event SmolBrainMint(address to, uint256 tokenId);
     event LevelIQCost(uint256 levelIQCost);
-    event LandMaxLevel(uint256 landMaxLevel);
+    event LandMaxLevel(uint256 brainMaxLevel);
     event SchoolSet(address school);
     event LandSet(address land);
 
@@ -42,19 +47,17 @@ contract SmolBrain is Ownable, ERC721Enumerable {
 
     constructor() ERC721("Smol Brain", "SmolBrain") {}
 
-    function mint(address _to, uint256 _tokenId) external onlyMerkleAirdrop {
-        require(!_exists(_tokenId), "SmolBrain: tokenId exists");
+    function mint(address _to) external onlyMerkleAirdrop {
+        emit SmolBrainMint(_to, _tokenIdTracker.current());
 
-        _safeMint(_to, _tokenId);
-
-        emit SmolBrainMint(_to, _tokenId);
+        _safeMint(_to, _tokenIdTracker.current());
+        _tokenIdTracker.increment();
     }
 
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         require(_exists(_tokenId), "SmolBrain: URI query for nonexistent token");
 
-        uint256 level = Math.min(scanBrain(_tokenId) / levelIQCost, landMaxLevel);
-        string memory baseURI = _baseURI();
+        uint256 level = Math.min(scanBrain(_tokenId) / levelIQCost, brainMaxLevel);
         return bytes(baseURI).length > 0 ?
             string(abi.encodePacked(
                 baseURI,
@@ -70,6 +73,7 @@ contract SmolBrain is Ownable, ERC721Enumerable {
     }
 
     function averageIQ() public view returns (uint256) {
+        if (totalSupply() == 0) return 0;
         uint256 totalIQ = school.totalIQ();
         return totalIQ / totalSupply();
     }
@@ -81,11 +85,17 @@ contract SmolBrain is Ownable, ERC721Enumerable {
 
     function _beforeTokenTransfer(
         address _from,
-        address,
+        address _to,
         uint256 _tokenId
     ) internal override {
+        super._beforeTokenTransfer(_from, _to, _tokenId);
+
         require(!school.isAtSchool(_tokenId), "SmolBrain: is at school. Drop school to transfer.");
-        land.upgradeSafe(land.tokenOfOwnerByIndex(_from, 0));
+        if (_from != address(0)) land.upgradeSafe(land.tokenOfOwnerByIndex(_from, 0));
+    }
+
+    function _baseURI() internal view override returns (string memory) {
+        return baseURI;
     }
 
     // ADMIN
@@ -110,8 +120,12 @@ contract SmolBrain is Ownable, ERC721Enumerable {
         emit LevelIQCost(_levelIQCost);
     }
 
-    function setMaxLevel(uint256 _landMaxLevel) external onlyOwner {
-        landMaxLevel = _landMaxLevel;
-        emit LandMaxLevel(_landMaxLevel);
+    function setMaxLevel(uint256 _brainMaxLevel) external onlyOwner {
+        brainMaxLevel = _brainMaxLevel;
+        emit LandMaxLevel(_brainMaxLevel);
+    }
+
+    function setBaseURI(string memory _baseURItoSet) external onlyOwner {
+        baseURI = _baseURItoSet;
     }
 }

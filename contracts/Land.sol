@@ -5,10 +5,15 @@ import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
+import '@openzeppelin/contracts/utils/Counters.sol';
 import './SmolBrain.sol';
 
 contract Land is Ownable, ERC721Enumerable {
     using Strings for uint256;
+    using Counters for Counters.Counter;
+
+    Counters.Counter private _tokenIdTracker;
+    string public baseURI;
 
     /// @dev 18 decimals
     uint256 public landMaxLevel;
@@ -35,11 +40,17 @@ contract Land is Ownable, ERC721Enumerable {
 
     constructor() ERC721("Smol Brain Land", "SmolBrainLand") {}
 
+    function mint(address _to) external onlyMerkleAirdrop {
+        emit LandMint(_to, _tokenIdTracker.current());
+
+        _safeMint(_to, _tokenIdTracker.current());
+        _tokenIdTracker.increment();
+    }
+
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         require(_exists(_tokenId), "Land: URI query for nonexistent token");
 
         (, uint256 availableLevel) = canUpgrade(_tokenId);
-        string memory baseURI = _baseURI();
         return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, availableLevel.toString())) : "";
     }
 
@@ -47,14 +58,13 @@ contract Land is Ownable, ERC721Enumerable {
     /// @return isUpgradeAvailable true if higher level is available
     /// @return availableLevel what level can land be upgraded to
     function canUpgrade(uint256 _tokenId) public view returns (bool isUpgradeAvailable, uint256 availableLevel) {
-        uint256 IQ = findBiggestBrainIQ(ownerOf(_tokenId));
-        uint256 maxLevel = Math.min(IQ / levelIQCost, landMaxLevel);
-        uint256 currentLevel = landLevels[_tokenId];
-        if (currentLevel < maxLevel) {
+        uint256 highestIQ = findBiggestBrainIQ(ownerOf(_tokenId));
+        uint256 averageIQ = smolBrain.averageIQ();
+        uint256 maxLevel = Math.min(averageIQ / levelIQCost, landMaxLevel);
+        availableLevel = Math.min(highestIQ / levelIQCost, maxLevel);
+        uint256 storedLevel = landLevels[_tokenId];
+        if (storedLevel < availableLevel) {
             isUpgradeAvailable = true;
-            availableLevel = maxLevel;
-        } else {
-            availableLevel = currentLevel;
         }
     }
 
@@ -72,14 +82,6 @@ contract Land is Ownable, ERC721Enumerable {
         }
     }
 
-    function mint(address _to, uint256 _tokenId) external onlyMerkleAirdrop {
-        require(!_exists(_tokenId), "Land: tokenId exists");
-
-        _safeMint(_to, _tokenId);
-
-        emit LandMint(_to, _tokenId);
-    }
-
     /// @param _tokenId tokenId of the land
     function upgrade(uint256 _tokenId) external {
         require(upgradeSafe(_tokenId), "Land: nothing to upgrade");
@@ -95,12 +97,18 @@ contract Land is Ownable, ERC721Enumerable {
     }
 
     function _beforeTokenTransfer(
-        address,
+        address _from,
         address _to,
         uint256 _tokenId
     ) internal override {
+        super._beforeTokenTransfer(_from, _to, _tokenId);
+
         require(balanceOf(_to) == 0, "Land: can own only one land");
-        upgradeSafe(_tokenId);
+        if (_from != address(0)) upgradeSafe(_tokenId);
+    }
+
+    function _baseURI() internal view override returns (string memory) {
+        return baseURI;
     }
 
     // ADMIN
@@ -123,5 +131,9 @@ contract Land is Ownable, ERC721Enumerable {
     function setLevelIQCost(uint256 _levelIQCost) external onlyOwner {
         levelIQCost = _levelIQCost;
         emit LevelIQCost(_levelIQCost);
+    }
+
+    function setBaseURI(string memory _baseURItoSet) external onlyOwner {
+        baseURI = _baseURItoSet;
     }
 }

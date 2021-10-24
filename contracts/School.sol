@@ -21,6 +21,7 @@ contract School is Ownable {
     event JoinSchool(uint256 tokenId);
     event DropSchool(uint256 tokenId);
     event SetIqPerWeek(uint256 iqPerWeek);
+    event SmolBrainSet(address smolBrain);
 
     modifier onlySmolBrainOwner(uint256 _tokenId) {
         require(smolBrain.ownerOf(_tokenId) == msg.sender, "School: only owner can send to school");
@@ -78,6 +79,11 @@ contract School is Ownable {
     }
 
     // ADMIN
+
+    function setSmolBrain(address _smolBrain) external onlyOwner {
+        smolBrain = SmolBrain(_smolBrain);
+        emit SmolBrainSet(_smolBrain);
+    }
 
     /// @param _iqPerWeek NUmber of IQ points to earn a week, 18 decimals
     function setIqPerWeek(uint256 _iqPerWeek) external onlyOwner {
