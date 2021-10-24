@@ -85,12 +85,7 @@ contract SmolBrain is Ownable, ERC721Enumerable {
         uint256 _tokenId
     ) internal override {
         require(!school.isAtSchool(_tokenId), "SmolBrain: is at school. Drop school to transfer.");
-        uint256 highestIQ = land.findBiggestBrainIQ(_from);
-        // if sending highest IQ smol brain, upgrade land before transfer
-        if (scanBrain(_tokenId) == highestIQ) {
-            uint256 landTokenId = land.tokenOfOwnerByIndex(_from, 0);
-            land.upgrade(landTokenId);
-        }
+        land.upgradeSafe(land.tokenOfOwnerByIndex(_from, 0));
     }
 
     // ADMIN

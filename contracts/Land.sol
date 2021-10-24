@@ -82,10 +82,10 @@ contract Land is Ownable, ERC721Enumerable {
 
     /// @param _tokenId tokenId of the land
     function upgrade(uint256 _tokenId) external {
-        require(_upgrade(_tokenId), "Land: nothing to upgrade");
+        require(upgradeSafe(_tokenId), "Land: nothing to upgrade");
     }
 
-    function _upgrade(uint256 _tokenId) internal returns (bool) {
+    function upgradeSafe(uint256 _tokenId) public returns (bool) {
         (bool isUpgradeAvailable, uint256 availableLevel) = canUpgrade(_tokenId);
         if (isUpgradeAvailable) {
             landLevels[_tokenId] = availableLevel;
@@ -100,7 +100,7 @@ contract Land is Ownable, ERC721Enumerable {
         uint256 _tokenId
     ) internal override {
         require(balanceOf(_to) == 0, "Land: can own only one land");
-        _upgrade(_tokenId);
+        upgradeSafe(_tokenId);
     }
 
     // ADMIN
