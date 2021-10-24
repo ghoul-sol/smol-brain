@@ -82,9 +82,9 @@ const config: HardhatUserConfig = {
   },
   namedAccounts: {
     deployer: 0,
-    staker1: 1,
-    staker2: 2,
-    staker3: 3,
+    player1: 1,
+    player2: 2,
+    player3: 3,
     hacker: 4
   },
   mocha: {
