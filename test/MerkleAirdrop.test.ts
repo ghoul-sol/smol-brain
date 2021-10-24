@@ -7,7 +7,7 @@ const keccak256 = require('keccak256');
 const {ethers, deployments, getNamedAccounts} = hre;
 const { deploy } = deployments;
 
-describe.only('MerkleAirdrop', function () {
+describe('MerkleAirdrop', function () {
   let land: any, school: any, smolBrain: any, merkleAirdrop: any;
   let player1: any, player2: any, player3: any, hacker: any, deployer: any;
   let player1Signer: any, player2Signer: any, player3Signer: any, hackerSigner: any, deployerSigner: any;
