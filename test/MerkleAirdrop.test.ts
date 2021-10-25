@@ -84,6 +84,10 @@ describe('MerkleAirdrop', function () {
       expect(await land.ownerOf(index)).to.be.equal(whitelist[index]);
       expect(await land.totalSupply()).to.be.equal(index+1);
     }
+
+    const leaf = keccak256(whitelist[0]);
+    const proof = merkleTree.getHexProof(leaf);
+    await expect(merkleAirdrop.connect(hackerSigner).mintSmolBrainAndLand(proof)).to.be.revertedWith("MerkleAirdrop: proof invalid")
   });
 
   describe('config', function () {
