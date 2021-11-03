@@ -76,7 +76,7 @@ describe('School', function () {
     let timestamp2: any;
 
     beforeEach(async function () {
-      await smolBrain.setMerkleAirdrop(deployer);
+      await smolBrain.grantMinter(deployer);
       await smolBrain.mint(player1);
       await smolBrain.mint(player2);
       await smolBrain.mint(player3);

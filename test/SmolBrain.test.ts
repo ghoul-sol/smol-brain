@@ -58,7 +58,7 @@ describe('SmolBrain', function () {
   });
 
   it('mint', async function () {
-    await smolBrain.setMerkleAirdrop(deployer);
+    await smolBrain.grantMinter(deployer);
     expect(await smolBrain.balanceOf(player1)).to.be.equal(0);
     await expect(smolBrain.ownerOf(0)).to.be.revertedWith("ERC721: owner query for nonexistent token");
 
@@ -81,10 +81,11 @@ describe('SmolBrain', function () {
       expect(await smolBrain.land()).to.be.equal(deployer);
     });
 
-    it('setMerkleAirdrop', async function () {
-      expect(await smolBrain.merkleAirdrop()).to.be.equal(merkleAirdrop.address);
-      await smolBrain.setMerkleAirdrop(deployer)
-      expect(await smolBrain.merkleAirdrop()).to.be.equal(deployer);
+    it('grantMinter', async function () {
+      expect(await smolBrain.isMinter(merkleAirdrop.address)).to.be.true;
+      expect(await smolBrain.isMinter(deployer)).to.be.false;
+      await smolBrain.grantMinter(deployer)
+      expect(await smolBrain.isMinter(deployer)).to.be.true;
     });
 
     it('setLevelIQCost', async function () {
@@ -111,7 +112,7 @@ describe('SmolBrain', function () {
     let timestamp2: any;
 
     beforeEach(async function () {
-      await smolBrain.setMerkleAirdrop(deployer);
+      await smolBrain.grantMinter(deployer);
       await smolBrain.mint(player1);
       await smolBrain.mint(player2);
       await smolBrain.mint(player3);

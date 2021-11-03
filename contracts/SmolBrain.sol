@@ -2,14 +2,14 @@
 pragma solidity 0.8.7;
 
 import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
 import './School.sol';
 import './Land.sol';
+import "./MinterControl.sol";
 
-contract SmolBrain is Ownable, ERC721Enumerable {
+contract SmolBrain is MinterControl, ERC721Enumerable {
     using Strings for uint256;
     using Counters for Counters.Counter;
 
@@ -21,24 +21,17 @@ contract SmolBrain is Ownable, ERC721Enumerable {
     /// @dev 18 decimals
     uint256 public levelIQCost;
 
-    address public merkleAirdrop;
     School public school;
     Land public land;
 
     // tokenId => IQ
     mapping(uint256 => uint256) public brainz;
 
-    event MerkleAirdropSet(address merkleAirdrop);
     event SmolBrainMint(address to, uint256 tokenId);
     event LevelIQCost(uint256 levelIQCost);
     event LandMaxLevel(uint256 brainMaxLevel);
     event SchoolSet(address school);
     event LandSet(address land);
-
-    modifier onlyMerkleAirdrop() {
-        require(msg.sender == merkleAirdrop, "SmolBrain: !merkleAirdrop");
-        _;
-    }
 
     modifier onlySchool() {
         require(msg.sender == address(school), "SmolBrain: !school");
@@ -47,7 +40,11 @@ contract SmolBrain is Ownable, ERC721Enumerable {
 
     constructor() ERC721("Smol Brain", "SmolBrain") {}
 
-    function mint(address _to) external onlyMerkleAirdrop {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721Enumerable, AccessControl) returns (bool) {
+        return ERC721Enumerable.supportsInterface(interfaceId) || AccessControl.supportsInterface(interfaceId);
+    }
+
+    function mint(address _to) external onlyMinter {
         emit SmolBrainMint(_to, _tokenIdTracker.current());
 
         _safeMint(_to, _tokenIdTracker.current());
@@ -108,11 +105,6 @@ contract SmolBrain is Ownable, ERC721Enumerable {
     function setLand(address _land) external onlyOwner {
         land = Land(_land);
         emit LandSet(_land);
-    }
-
-    function setMerkleAirdrop(address _merkleAirdrop) external onlyOwner {
-        merkleAirdrop = _merkleAirdrop;
-        emit MerkleAirdropSet(_merkleAirdrop);
     }
 
     function setLevelIQCost(uint256 _levelIQCost) external onlyOwner {

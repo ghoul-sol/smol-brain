@@ -58,7 +58,7 @@ describe('Land', function () {
   });
 
   it('mint', async function () {
-    await land.setMerkleAirdrop(deployer);
+    await land.grantMinter(deployer);
     expect(await land.balanceOf(player1)).to.be.equal(0);
     await expect(land.ownerOf(0)).to.be.revertedWith("ERC721: owner query for nonexistent token");
 
@@ -75,10 +75,10 @@ describe('Land', function () {
       expect(await land.smolBrain()).to.be.equal(deployer);
     });
 
-    it('setMerkleAirdrop', async function () {
-      expect(await land.merkleAirdrop()).to.be.equal(merkleAirdrop.address);
-      await land.setMerkleAirdrop(deployer)
-      expect(await land.merkleAirdrop()).to.be.equal(deployer);
+    it('grantMinter', async function () {
+      expect(await land.isMinter(deployer)).to.be.false;
+      await land.grantMinter(deployer)
+      expect(await land.isMinter(deployer)).to.be.true;
     });
 
     it('setMaxLevel', async function () {
@@ -99,11 +99,11 @@ describe('Land', function () {
     let timestamp2: any;
 
     beforeEach(async function () {
-      await smolBrain.setMerkleAirdrop(deployer);
+      await smolBrain.grantMinter(deployer);
       await smolBrain.mint(player1);
       await smolBrain.mint(player1);
       await smolBrain.mint(player1);
-      await land.setMerkleAirdrop(deployer);
+      await land.grantMinter(deployer);
       await land.mint(player1);
 
       let tx = await school.connect(player1Signer).join(0);

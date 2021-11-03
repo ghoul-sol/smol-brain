@@ -85,11 +85,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     );
   }
 
-  if(await read('Land', 'merkleAirdrop') != MerkleAirdrop.address) {
+  if(!(await read('Land', 'isMinter', MerkleAirdrop.address))) {
     await execute(
       'Land',
       { from: deployer, log: true },
-      'setMerkleAirdrop',
+      'grantMinter',
       MerkleAirdrop.address
     );
   }
@@ -161,11 +161,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     );
   }
 
-  if(await read('SmolBrain', 'merkleAirdrop') != MerkleAirdrop.address) {
+  if(!(await read('SmolBrain', 'isMinter', MerkleAirdrop.address))) {
     await execute(
       'SmolBrain',
       { from: deployer, log: true },
-      'setMerkleAirdrop',
+      'grantMinter',
       MerkleAirdrop.address
     );
   }

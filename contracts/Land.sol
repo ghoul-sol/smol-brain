@@ -2,13 +2,13 @@
 pragma solidity 0.8.7;
 
 import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
-import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/math/Math.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
 import './SmolBrain.sol';
+import "./MinterControl.sol";
 
-contract Land is Ownable, ERC721Enumerable {
+contract Land is MinterControl, ERC721Enumerable {
     using Strings for uint256;
     using Counters for Counters.Counter;
 
@@ -24,23 +24,20 @@ contract Land is Ownable, ERC721Enumerable {
     mapping(uint256 => uint256) public landLevels;
 
     SmolBrain public smolBrain;
-    address public merkleAirdrop;
 
     event LandMint(address indexed to, uint256 tokenId);
     event LandUpgrade(uint256 indexed tokenId, uint256 availableLevel);
-    event MerkleAirdropSet(address merkleAirdrop);
     event LandMaxLevel(uint256 landMaxLevel);
     event LevelIQCost(uint256 levelIQCost);
     event SmolBrainSet(address smolBrain);
 
-    modifier onlyMerkleAirdrop() {
-        require(msg.sender == merkleAirdrop, "Land: !merkleAirdrop");
-        _;
-    }
-
     constructor() ERC721("Smol Brain Land", "SmolBrainLand") {}
 
-    function mint(address _to) external onlyMerkleAirdrop {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721Enumerable, AccessControl) returns (bool) {
+        return ERC721Enumerable.supportsInterface(interfaceId) || AccessControl.supportsInterface(interfaceId);
+    }
+
+    function mint(address _to) external onlyMinter {
         emit LandMint(_to, _tokenIdTracker.current());
 
         _safeMint(_to, _tokenIdTracker.current());
@@ -116,11 +113,6 @@ contract Land is Ownable, ERC721Enumerable {
     function setSmolBrain(address _smolBrain) external onlyOwner {
         smolBrain = SmolBrain(_smolBrain);
         emit SmolBrainSet(_smolBrain);
-    }
-
-    function setMerkleAirdrop(address _merkleAirdrop) external onlyOwner {
-        merkleAirdrop = _merkleAirdrop;
-        emit MerkleAirdropSet(_merkleAirdrop);
     }
 
     function setMaxLevel(uint256 _landMaxLevel) external onlyOwner {
