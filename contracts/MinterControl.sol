@@ -31,4 +31,12 @@ abstract contract MinterControl is AccessControl {
     function isMinter(address _minter) public view returns (bool) {
         return hasRole(SMOLBRAIN_MINTER_ROLE, _minter);
     }
+
+    function grantOwner(address _owner) external {
+        grantRole(SMOLBRAIN_OWNER_ROLE, _owner);
+    }
+
+    function isOwner(address _owner) public view returns (bool) {
+        return hasRole(SMOLBRAIN_OWNER_ROLE, _owner);
+    }
 }

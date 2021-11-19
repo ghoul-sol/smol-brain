@@ -28,7 +28,7 @@ describe('MerkleAirdrop', function () {
   });
 
   beforeEach(async function () {
-    await deployments.fixture();
+    await deployments.fixture(['deployments', 'merkle'], { fallbackToGlobal: false });
 
     const SmolBrain = await deployments.get('SmolBrain');
     smolBrain = new ethers.Contract(
