@@ -22,7 +22,8 @@ contract MerkleAirdrop is Ownable {
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
         require(MerkleProof.verify(proof, merkleRoot, leaf), "MerkleAirdrop: proof invalid");
 
-        smolBrain.mint(msg.sender);
+        smolBrain.mintMale(msg.sender);
+        smolBrain.mintFemale(msg.sender);
         if (land.balanceOf(msg.sender) == 0) land.mint(msg.sender);
     }
 

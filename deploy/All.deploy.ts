@@ -25,6 +25,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     }
   }
 
+  // astronaut airdrop
+  const luckyWinner = "0xf8fE9fe9d148104743AB29C1c445174B7D9eE22F";
+
   const MerkleAirdrop = await deploy('MerkleAirdrop', {
     from: deployer,
     log: true,
@@ -43,6 +46,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const SmolBrain = await deploy('SmolBrain', {
     from: deployer,
     log: true,
+    args: [luckyWinner]
   })
 
   // MerkleAirdrop

@@ -13,7 +13,13 @@ contract SmolBrain is MinterControl, ERC721Enumerable {
     using Strings for uint256;
     using Counters for Counters.Counter;
 
-    Counters.Counter private _tokenIdTracker;
+    uint256 constant LAST_MALE = 6710;
+    uint256 constant LAST_FEMALE = 13422;
+
+    enum Gender { Male, Female }
+
+    Counters.Counter private _maleTokenIdTracker;
+    Counters.Counter private _femaleTokenIdTracker;
     string public baseURI;
 
     /// @dev 18 decimals
@@ -27,7 +33,7 @@ contract SmolBrain is MinterControl, ERC721Enumerable {
     // tokenId => IQ
     mapping(uint256 => uint256) public brainz;
 
-    event SmolBrainMint(address to, uint256 tokenId);
+    event SmolBrainMint(address to, uint256 tokenId, Gender gender);
     event LevelIQCost(uint256 levelIQCost);
     event LandMaxLevel(uint256 brainMaxLevel);
     event SchoolSet(address school);
@@ -38,17 +44,25 @@ contract SmolBrain is MinterControl, ERC721Enumerable {
         _;
     }
 
-    constructor() ERC721("Smol Brain", "SmolBrain") {}
+    constructor(address _luckyWinner) ERC721("Smol Brain", "SmolBrain") {
+        _femaleTokenIdTracker._value = LAST_MALE + 1;
+        _mint(_luckyWinner, Gender.Male);
+    }
 
     function supportsInterface(bytes4 interfaceId) public view override(ERC721Enumerable, AccessControl) returns (bool) {
         return ERC721Enumerable.supportsInterface(interfaceId) || AccessControl.supportsInterface(interfaceId);
     }
 
-    function mint(address _to) external onlyMinter {
-        emit SmolBrainMint(_to, _tokenIdTracker.current());
+    function mintMale(address _to) external onlyMinter {
+        _mint(_to, Gender.Male);
+    }
 
-        _safeMint(_to, _tokenIdTracker.current());
-        _tokenIdTracker.increment();
+    function mintFemale(address _to) external onlyMinter {
+        _mint(_to, Gender.Female);
+    }
+
+    function getGender(uint256 _tokenId) public pure returns (Gender) {
+        return _tokenId <= LAST_MALE ? Gender.Male : Gender.Female;
     }
 
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
@@ -80,6 +94,22 @@ contract SmolBrain is MinterControl, ERC721Enumerable {
         brainz[_tokenId] += _iqEarned;
     }
 
+    function _mint(address _to, Gender _gender) internal {
+        uint256 _tokenId;
+        if (_gender == Gender.Male) {
+            _tokenId = _maleTokenIdTracker.current();
+            _maleTokenIdTracker.increment();
+            require(_tokenId <= LAST_MALE, "SmolBrain: exceeded tokenId for male");
+        } else {
+            _tokenId = _femaleTokenIdTracker.current();
+            _femaleTokenIdTracker.increment();
+            require(_tokenId <= LAST_FEMALE, "SmolBrain: exceeded tokenId for female");
+        }
+
+        emit SmolBrainMint(_to, _tokenId, _gender);
+        _safeMint(_to, _tokenId);
+    }
+
     function _beforeTokenTransfer(
         address _from,
         address _to,
@@ -87,8 +117,10 @@ contract SmolBrain is MinterControl, ERC721Enumerable {
     ) internal override {
         super._beforeTokenTransfer(_from, _to, _tokenId);
 
-        require(!school.isAtSchool(_tokenId), "SmolBrain: is at school. Drop school to transfer.");
-        if (_from != address(0)) land.upgradeSafe(land.tokenOfOwnerByIndex(_from, 0));
+        if (address(school) != address(0))
+            require(!school.isAtSchool(_tokenId), "SmolBrain: is at school. Drop school to transfer.");
+        if (_from != address(0))
+            land.upgradeSafe(land.tokenOfOwnerByIndex(_from, 0));
     }
 
     function _baseURI() internal view override returns (string memory) {

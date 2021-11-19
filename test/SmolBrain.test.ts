@@ -60,12 +60,12 @@ describe('SmolBrain', function () {
   it('mint', async function () {
     await smolBrain.grantMinter(deployer);
     expect(await smolBrain.balanceOf(player1)).to.be.equal(0);
-    await expect(smolBrain.ownerOf(0)).to.be.revertedWith("ERC721: owner query for nonexistent token");
+    await expect(smolBrain.ownerOf(1)).to.be.revertedWith("ERC721: owner query for nonexistent token");
 
-    await smolBrain.mint(player1);
+    await smolBrain.mintMale(player1);
     expect(await smolBrain.balanceOf(player1)).to.be.equal(1);
-    expect(await smolBrain.ownerOf(0)).to.be.equal(player1);
-    expect(await smolBrain.totalSupply()).to.be.equal(1);
+    expect(await smolBrain.ownerOf(1)).to.be.equal(player1);
+    expect(await smolBrain.totalSupply()).to.be.equal(2);
   });
 
   describe('config', function () {
@@ -113,39 +113,45 @@ describe('SmolBrain', function () {
 
     beforeEach(async function () {
       await smolBrain.grantMinter(deployer);
-      await smolBrain.mint(player1);
-      await smolBrain.mint(player2);
-      await smolBrain.mint(player3);
+      await smolBrain.mintMale(player1);
+      await smolBrain.mintMale(player2);
+      await smolBrain.mintFemale(player3);
 
-      let tx = await school.connect(player1Signer).join(0);
+      let tx = await school.connect(player1Signer).join(1);
       await tx.wait();
       timestamp1 = await getBlockTime(tx.blockNumber);
 
-      tx = await school.connect(player2Signer).join(1);
+      tx = await school.connect(player2Signer).join(2);
       await tx.wait();
       timestamp2 = await getBlockTime(tx.blockNumber);
     });
 
     it('scanBrain', async function () {
       await mineBlock(timestamp1 + 60*60*24*7);
-      expect(await smolBrain.scanBrain(0)).to.be.equal("50000000000000000000")
+      let ID1 = await smolBrain.tokenOfOwnerByIndex(player1, 0);
+      let ID2 = await smolBrain.tokenOfOwnerByIndex(player2, 0);
+      let ID3 = await smolBrain.tokenOfOwnerByIndex(player3, 0);
+
+      expect(await smolBrain.scanBrain(ID1)).to.be.equal("50000000000000000000")
 
       await mineBlock(timestamp2 + 60*60*24*7);
-      expect(await smolBrain.scanBrain(1)).to.be.equal("50000000000000000000")
+      expect(await smolBrain.scanBrain(ID2)).to.be.equal("50000000000000000000")
 
-      expect(await smolBrain.scanBrain(0)).to.be.gt("50000000000000000000")
-      expect(await smolBrain.scanBrain(2)).to.be.equal(0)
+      expect(await smolBrain.scanBrain(ID1)).to.be.gt("50000000000000000000")
+      expect(await smolBrain.scanBrain(ID3)).to.be.equal(0)
     });
 
     it('averageIQ', async function () {
       await mineBlock(timestamp2 + 60*60*24*7);
 
       let totalIQ: any = 0;
-      for (let index = 0; index < 3; index++) {
-        const iq = await smolBrain.scanBrain(index)
+      const totalSupply = await smolBrain.totalSupply()
+      for (let index = 0; index < totalSupply; index++) {
+        const ID = await smolBrain.tokenByIndex(index)
+        const iq = await smolBrain.scanBrain(ID)
         totalIQ = iq.add(totalIQ)
       }
-      expect(await smolBrain.averageIQ()).to.be.equal(totalIQ.div(3));
+      expect(await smolBrain.averageIQ()).to.be.equal(totalIQ.div(totalSupply));
     });
 
     it('schoolDrop', async function () {
@@ -160,24 +166,29 @@ describe('SmolBrain', function () {
     });
 
     it('tokenURI', async function () {
-      for (let index = 0; index < 3; index++) {
-        expect(await smolBrain.tokenURI(index)).to.be.equal(`ipfs//SmolBrain/${index}/0`);
+      const totalSupply = await smolBrain.totalSupply()
+      for (let index = 0; index < totalSupply; index++) {
+        const ID = await smolBrain.tokenByIndex(index)
+        expect(await smolBrain.tokenURI(ID)).to.be.equal(`ipfs//SmolBrain/${ID}/0`);
       }
 
       await mineBlock(timestamp1 + 60*60*24*7);
 
-      for (let index = 0; index < 3; index++) {
+      for (let index = 0; index < totalSupply; index++) {
+        const ID = await smolBrain.tokenByIndex(index)
         let level = 0;
-        if (index == 0) level = 1;
-        expect(await smolBrain.tokenURI(index)).to.be.equal(`ipfs//SmolBrain/${index}/${level}`);
+        if (ID == 1) level = 1;
+        expect(await smolBrain.tokenURI(ID)).to.be.equal(`ipfs//SmolBrain/${ID}/${level}`);
       }
 
       await mineBlock(timestamp2 + 60*60*24*7);
 
-      for (let index = 0; index < 3; index++) {
+      for (let index = 0; index < totalSupply; index++) {
+        const ID = await smolBrain.tokenByIndex(index)
         let level = 1;
-        if (index == 2) level = 0;
-        expect(await smolBrain.tokenURI(index)).to.be.equal(`ipfs//SmolBrain/${index}/${level}`);
+        if (ID == 0) level = 0;
+        if (ID == 6711) level = 0;
+        expect(await smolBrain.tokenURI(ID)).to.be.equal(`ipfs//SmolBrain/${ID}/${level}`);
       }
     });
   })

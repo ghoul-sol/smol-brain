@@ -77,9 +77,9 @@ describe('School', function () {
 
     beforeEach(async function () {
       await smolBrain.grantMinter(deployer);
-      await smolBrain.mint(player1);
-      await smolBrain.mint(player2);
-      await smolBrain.mint(player3);
+      await smolBrain.mintMale(player1);
+      await smolBrain.mintFemale(player2);
+      await smolBrain.mintFemale(player3);
     });
 
     it('join', async function () {
@@ -87,21 +87,23 @@ describe('School', function () {
 
       expect(await school.timestampJoined(0)).to.be.equal(0);
       expect(await school.isAtSchool(0)).to.be.false;
-      let tx = await school.connect(player1Signer).join(0);
+      let ID1 = await smolBrain.tokenOfOwnerByIndex(player1, 0);
+      let tx = await school.connect(player1Signer).join(ID1);
       await tx.wait();
       timestamp1 = await getBlockTime(tx.blockNumber);
-      expect(await school.isAtSchool(0)).to.be.true;
-      expect(await school.timestampJoined(0)).to.be.equal(timestamp1);
+      expect(await school.isAtSchool(ID1)).to.be.true;
+      expect(await school.timestampJoined(ID1)).to.be.equal(timestamp1);
       expect(await school.lastRewardTimestamp()).to.be.equal(timestamp1);
       expect(await school.totalIqStored()).to.be.equal(0);
 
-      expect(await school.timestampJoined(1)).to.be.equal(0);
-      expect(await school.isAtSchool(1)).to.be.false;
-      tx = await school.connect(player2Signer).join(1);
+      expect(await school.timestampJoined(ID1+1)).to.be.equal(0);
+      expect(await school.isAtSchool(ID1+1)).to.be.false;
+      let ID2 = await smolBrain.tokenOfOwnerByIndex(player2, 0);
+      tx = await school.connect(player2Signer).join(ID2);
       await tx.wait();
       timestamp2 = await getBlockTime(tx.blockNumber);
-      expect(await school.isAtSchool(1)).to.be.true;
-      expect(await school.timestampJoined(1)).to.be.equal(timestamp2);
+      expect(await school.isAtSchool(ID2)).to.be.true;
+      expect(await school.timestampJoined(ID2)).to.be.equal(timestamp2);
       expect(await school.lastRewardTimestamp()).to.be.equal(timestamp2);
 
       const iqPerWeek = await school.iqPerWeek();
@@ -112,20 +114,23 @@ describe('School', function () {
 
     describe('at school', function () {
       beforeEach(async function () {
-        let tx = await school.connect(player1Signer).join(0);
+        let ID1 = await smolBrain.tokenOfOwnerByIndex(player1, 0);
+        let tx = await school.connect(player1Signer).join(ID1);
         await tx.wait();
         timestamp1 = await getBlockTime(tx.blockNumber);
 
-        tx = await school.connect(player2Signer).join(1);
+        let ID2 = await smolBrain.tokenOfOwnerByIndex(player2, 0);
+        tx = await school.connect(player2Signer).join(ID2);
         await tx.wait();
         timestamp2 = await getBlockTime(tx.blockNumber);
       });
 
       it('drop', async function () {
         await mineBlock(timestamp1 + 60*60*24*7);
-        let tx = await school.connect(player1Signer).drop(0);
-        expect(await school.isAtSchool(0)).to.be.false;
-        expect(await school.timestampJoined(0)).to.be.equal(0);
+        let ID1 = await smolBrain.tokenOfOwnerByIndex(player1, 0);
+        let tx = await school.connect(player1Signer).drop(ID1);
+        expect(await school.isAtSchool(ID1)).to.be.false;
+        expect(await school.timestampJoined(ID1)).to.be.equal(0);
         expect(await school.lastRewardTimestamp()).to.be.equal(await getBlockTime(tx.blockNumber));
         expect(await school.totalIqStored()).to.be.equal("100000082671957671957");
       });
@@ -137,9 +142,13 @@ describe('School', function () {
 
       it('iqEarned', async function () {
         await mineBlock(timestamp1 + 60*60*24*7);
-        expect(await school.iqEarned(0)).to.be.equal("50000000000000000000");
-        expect(await school.iqEarned(1)).to.be.equal("49999917328042328042");
-        expect(await school.iqEarned(2)).to.be.equal("0");
+        let ID1 = await smolBrain.tokenOfOwnerByIndex(player1, 0);
+        let ID2 = await smolBrain.tokenOfOwnerByIndex(player2, 0);
+        let ID3 = await smolBrain.tokenOfOwnerByIndex(player3, 0);
+
+        expect(await school.iqEarned(ID1)).to.be.equal("50000000000000000000");
+        expect(await school.iqEarned(ID2)).to.be.equal("49999917328042328042");
+        expect(await school.iqEarned(ID3)).to.be.equal("0");
       });
     })
   })

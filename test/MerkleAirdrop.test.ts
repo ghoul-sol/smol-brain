@@ -76,9 +76,12 @@ describe('MerkleAirdrop', function () {
         .connect(await ethers.provider.getSigner(whitelist[index]))
         .mintSmolBrainAndLand(proof);
 
-      expect(await smolBrain.balanceOf(whitelist[index])).to.be.equal(1);
-      expect(await smolBrain.ownerOf(index)).to.be.equal(whitelist[index]);
-      expect(await smolBrain.totalSupply()).to.be.equal(index+1);
+      expect(await smolBrain.balanceOf(whitelist[index])).to.be.equal(2);
+      const ID1 = await smolBrain.tokenOfOwnerByIndex(whitelist[index], 0);
+      const ID2 = await smolBrain.tokenOfOwnerByIndex(whitelist[index], 1);
+      expect(await smolBrain.ownerOf(ID1)).to.be.equal(whitelist[index]);
+      expect(await smolBrain.ownerOf(ID2)).to.be.equal(whitelist[index]);
+      expect(await smolBrain.totalSupply()).to.be.equal(index*2+3);
 
       expect(await land.balanceOf(whitelist[index])).to.be.equal(1);
       expect(await land.ownerOf(index)).to.be.equal(whitelist[index]);

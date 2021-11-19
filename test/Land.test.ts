@@ -100,17 +100,17 @@ describe('Land', function () {
 
     beforeEach(async function () {
       await smolBrain.grantMinter(deployer);
-      await smolBrain.mint(player1);
-      await smolBrain.mint(player1);
-      await smolBrain.mint(player1);
+      await smolBrain.mintMale(player1);
+      await smolBrain.mintMale(player1);
+      await smolBrain.mintFemale(player1);
       await land.grantMinter(deployer);
       await land.mint(player1);
 
-      let tx = await school.connect(player1Signer).join(0);
+      let tx = await school.connect(player1Signer).join(1);
       await tx.wait();
       timestamp1 = await getBlockTime(tx.blockNumber);
 
-      tx = await school.connect(player1Signer).join(1);
+      tx = await school.connect(player1Signer).join(2);
       await tx.wait();
       timestamp2 = await getBlockTime(tx.blockNumber);
     });
@@ -129,9 +129,9 @@ describe('Land', function () {
       await mineBlock(timestamp1 + 60*60*24*7);
 
       canUpgrade = await land.canUpgrade(0);
-      expect(await smolBrain.averageIQ()).to.be.equal("33333305776014109347");
+      expect(await smolBrain.averageIQ()).to.be.equal("24999979332010582010");
       expect(canUpgrade.isUpgradeAvailable).to.be.true;
-      expect(canUpgrade.availableLevel).to.be.equal(3);
+      expect(canUpgrade.availableLevel).to.be.equal(2);
     });
 
     it('upgradeSafe', async function () {
@@ -164,26 +164,26 @@ describe('Land', function () {
     });
 
     it('tokenURI', async function () {
-      expect(await smolBrain.averageIQ()).to.be.equal("27557319223985");
+      expect(await smolBrain.averageIQ()).to.be.equal("20667989417989");
       expect(await land.tokenURI(0)).to.be.equal(`ipfs//Land/0`);
 
       await mineBlock(timestamp1 + 60*60*24*7);
 
-      expect(await smolBrain.averageIQ()).to.be.equal("33333305776014109347");
-      expect(await land.tokenURI(0)).to.be.equal(`ipfs//Land/3`);
+      expect(await smolBrain.averageIQ()).to.be.equal("24999979332010582010");
+      expect(await land.tokenURI(0)).to.be.equal(`ipfs//Land/2`);
 
       await mineBlock(timestamp1 + 60*60*24*7*1.5);
 
-      expect(await smolBrain.averageIQ()).to.be.equal("49999972442680776013");
-      expect(await land.tokenURI(0)).to.be.equal(`ipfs//Land/4`);
+      expect(await smolBrain.averageIQ()).to.be.equal("37499979332010582010");
+      expect(await land.tokenURI(0)).to.be.equal(`ipfs//Land/3`);
 
       await mineBlock(timestamp1 + 60*60*24*7*2);
 
-      expect(await smolBrain.averageIQ()).to.be.equal("66666639109347442680");
-      expect(await land.tokenURI(0)).to.be.equal(`ipfs//Land/6`);
+      expect(await smolBrain.averageIQ()).to.be.equal("49999979332010582010");
+      expect(await land.tokenURI(0)).to.be.equal(`ipfs//Land/4`);
 
       await mineBlock(timestamp1 + 60*60*24*7*4);
-      expect(await smolBrain.averageIQ()).to.be.equal("133333305776014109347");
+      expect(await smolBrain.averageIQ()).to.be.equal("99999979332010582010");
       const landMaxLevel = await land.landMaxLevel();
       expect(await land.tokenURI(0)).to.be.equal(`ipfs//Land/${landMaxLevel}`);
     });
