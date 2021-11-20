@@ -60,37 +60,55 @@ describe('MerkleAirdrop', function () {
   });
 
   it('mint', async function () {
-    let whitelist = [];
-    whitelist[0] = player1;
-    whitelist[1] = player2;
-    whitelist[2] = player3;
+    let wallets = [
+      [player1, 9],
+      [player2, 68],
+      [player3, 1],
+    ]
 
-    const merkleTree = new MerkleTree(whitelist, keccak256, { hashLeaves: true, sortPairs: true });
+    let whitelist = wallets.map(x => ethers.utils.solidityKeccak256(["address", "uint256"], [x[0], x[1]]));
+
+    const merkleTree = new MerkleTree(whitelist, keccak256, { sortPairs: true });
     const root = merkleTree.getHexRoot();
     await merkleAirdrop.setMerkleRoot(root);
 
     for (let index = 0; index < whitelist.length; index++) {
-      const leaf = keccak256(whitelist[index]);
+      const wallet = wallets[index][0];
+      const amount = wallets[index][1];
+
+      const leaf = ethers.utils.solidityKeccak256(["address", "uint256"], [wallet, amount]); //keccak256(whitelist[index]);
+      expect(leaf).to.be.equal(whitelist[index]);
       const proof = merkleTree.getHexProof(leaf);
-      await merkleAirdrop
-        .connect(await ethers.provider.getSigner(whitelist[index]))
-        .mintSmolBrainAndLand(proof);
 
-      expect(await smolBrain.balanceOf(whitelist[index])).to.be.equal(2);
-      const ID1 = await smolBrain.tokenOfOwnerByIndex(whitelist[index], 0);
-      const ID2 = await smolBrain.tokenOfOwnerByIndex(whitelist[index], 1);
-      expect(await smolBrain.ownerOf(ID1)).to.be.equal(whitelist[index]);
-      expect(await smolBrain.ownerOf(ID2)).to.be.equal(whitelist[index]);
-      expect(await smolBrain.totalSupply()).to.be.equal(index*2+3);
+      await expect(merkleAirdrop.connect(hackerSigner).mintSmolBrainAndLand(proof, amount)).to.be.revertedWith("MerkleAirdrop: proof invalid")
 
-      expect(await land.balanceOf(whitelist[index])).to.be.equal(1);
-      expect(await land.ownerOf(index)).to.be.equal(whitelist[index]);
-      expect(await land.totalSupply()).to.be.equal(index+1);
+      expect(await merkleAirdrop.leftToClaim(proof, amount)).to.be.equal(amount);
+
+      while (await merkleAirdrop.leftToClaim(proof, amount) > 0) {
+        await merkleAirdrop
+          .connect(await ethers.provider.getSigner(wallet))
+          .mintSmolBrainAndLand(proof, amount);
+      }
+
+      await expect(
+        merkleAirdrop
+          .connect(await ethers.provider.getSigner(wallet))
+          .mintSmolBrainAndLand(proof, amount)
+      ).to.be.revertedWith("MerkleAirdrop: already claimed")
+
+      expect(await merkleAirdrop.leftToClaim(proof, amount)).to.be.equal(0);
+      expect(await smolBrain.balanceOf(wallet)).to.be.equal(amount*2);
+      const ID1 = await smolBrain.tokenOfOwnerByIndex(wallet, 0);
+      const ID2 = await smolBrain.tokenOfOwnerByIndex(wallet, 1);
+      expect(await smolBrain.ownerOf(ID1)).to.be.equal(wallet);
+      expect(await smolBrain.getGender(ID1)).to.be.equal(0);
+      expect(await smolBrain.ownerOf(ID2)).to.be.equal(wallet);
+      expect(await smolBrain.getGender(ID2)).to.be.equal(1);
+
+      expect(await land.balanceOf(wallet)).to.be.equal(1);
+      expect(await land.ownerOf(index)).to.be.equal(wallet);
     }
-
-    const leaf = keccak256(whitelist[0]);
-    const proof = merkleTree.getHexProof(leaf);
-    await expect(merkleAirdrop.connect(hackerSigner).mintSmolBrainAndLand(proof)).to.be.revertedWith("MerkleAirdrop: proof invalid")
+    expect(await smolBrain.totalSupply()).to.be.equal(78*2+1);
   });
 
   describe('config', function () {
