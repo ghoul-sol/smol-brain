@@ -14,7 +14,7 @@ contract SmolBrain is MinterControl, ERC721Enumerable {
     using Counters for Counters.Counter;
 
     uint256 constant LAST_MALE = 6710;
-    uint256 constant LAST_FEMALE = 13422;
+    uint256 constant LAST_FEMALE = 13421;
 
     enum Gender { Male, Female }
 
