@@ -22,9 +22,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         levelIQCost: ethers.utils.parseUnits('50', 'ether'),
         baseURI: "https://treasure-marketplace.mypinata.cloud/ipfs/QmZg7bqH36fnKUcmKDhqGm65j5hbFeDZcogoxxiFMLeybE/"
       },
-      MerkleAirdrop: {
-        claimPerWallet: 1
-      }
     }
   } else {
     CONFIG = {
@@ -41,9 +38,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         levelIQCost: ethers.utils.parseUnits('50', 'ether'),
         baseURI: "ipfs//SmolBrain/"
       },
-      MerkleAirdrop: {
-        claimPerWallet: 1
-      }
     }
   }
 
@@ -88,15 +82,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       { from: deployer, log: true },
       'setLand',
       Land.address
-    );
-  }
-
-  if(await read('MerkleAirdrop', 'claimPerWallet') != CONFIG.MerkleAirdrop.claimPerWallet) {
-    await execute(
-      'MerkleAirdrop',
-      { from: deployer, log: true },
-      'setClaimPerWallet',
-      CONFIG.MerkleAirdrop.claimPerWallet
     );
   }
 

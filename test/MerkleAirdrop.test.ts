@@ -129,11 +129,5 @@ describe('MerkleAirdrop', function () {
       await merkleAirdrop.setLand(deployer)
       expect(await merkleAirdrop.land()).to.be.equal(deployer);
     });
-
-    it('setClaimPerWallet', async function () {
-      const claimPerWallet = 3;
-      await merkleAirdrop.setClaimPerWallet(claimPerWallet)
-      expect(await merkleAirdrop.claimPerWallet()).to.be.equal(claimPerWallet);
-    });
   })
 });

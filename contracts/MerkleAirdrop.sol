@@ -15,7 +15,6 @@ contract MerkleAirdrop is Ownable {
     mapping(bytes32 => Claim) public claimed;
 
     bytes32 public merkleRoot;
-    uint256 public claimPerWallet;
 
     SmolBrain public smolBrain;
     Land public land;
@@ -65,9 +64,5 @@ contract MerkleAirdrop is Ownable {
 
     function setLand(address _land) external onlyOwner {
         land = Land(_land);
-    }
-
-    function setClaimPerWallet(uint256 _claimPerWallet) external onlyOwner {
-        claimPerWallet = _claimPerWallet;
     }
 }
