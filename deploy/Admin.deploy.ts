@@ -6,7 +6,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy, read, execute } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const newAdmin = "0xf8fE9fe9d148104743AB29C1c445174B7D9eE22F";
+  const newAdmin = "0x032F84aEfF59ddEBC55797F321624826d873bF65";
 
   // Transfer Ownership
   if(await read('MerkleAirdrop', 'owner') != newAdmin) {
@@ -67,4 +67,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 export default func;
 func.tags = ['admin'];
-func.dependencies = ['deployments'];
+func.dependencies = ['deployments', 'merkle'];

@@ -2,31 +2,53 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const { ethers, deployments, getNamedAccounts } = hre;
+  const { network, ethers, deployments, getNamedAccounts } = hre;
   const { deploy, read, execute } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const CONFIG = {
-    Land: {
-      landMaxLevel: 6,
-      levelIQCost: ethers.utils.parseUnits('10', 'ether'),
-      baseURI: "ipfs//Land/"
-    },
-    School: {
-      iqPerWeek: ethers.utils.parseUnits('50', 'ether')
-    },
-    SmolBrain: {
-      brainMaxLevel: 6,
-      levelIQCost: ethers.utils.parseUnits('50', 'ether'),
-      baseURI: "ipfs//SmolBrain/"
-    },
-    MerkleAirdrop: {
-      claimPerWallet: 1
+  let CONFIG;
+  if (network.name == 'arbitrum') {
+    CONFIG = {
+      Land: {
+        landMaxLevel: 0,
+        levelIQCost: ethers.utils.parseUnits('10', 'ether'),
+        baseURI: "https://treasure-marketplace.mypinata.cloud/ipfs/QmbJRkZnHqSd67aQa2U9XPqFRNS7iQXxnDReYMtYMKmsqZ/"
+      },
+      School: {
+        iqPerWeek: ethers.utils.parseUnits('50', 'ether')
+      },
+      SmolBrain: {
+        brainMaxLevel: 5,
+        levelIQCost: ethers.utils.parseUnits('50', 'ether'),
+        baseURI: "https://treasure-marketplace.mypinata.cloud/ipfs/QmZg7bqH36fnKUcmKDhqGm65j5hbFeDZcogoxxiFMLeybE/"
+      },
+      MerkleAirdrop: {
+        claimPerWallet: 1
+      }
+    }
+  } else {
+    CONFIG = {
+      Land: {
+        landMaxLevel: 6,
+        levelIQCost: ethers.utils.parseUnits('10', 'ether'),
+        baseURI: "ipfs//Land/"
+      },
+      School: {
+        iqPerWeek: ethers.utils.parseUnits('50', 'ether')
+      },
+      SmolBrain: {
+        brainMaxLevel: 6,
+        levelIQCost: ethers.utils.parseUnits('50', 'ether'),
+        baseURI: "ipfs//SmolBrain/"
+      },
+      MerkleAirdrop: {
+        claimPerWallet: 1
+      }
     }
   }
 
   // astronaut airdrop
-  const luckyWinner = "0xf8fE9fe9d148104743AB29C1c445174B7D9eE22F";
+  const luckyWinner = "0x8212032375F79eaF70068c7B4182f31c2af1F164";
 
   const MerkleAirdrop = await deploy('MerkleAirdrop', {
     from: deployer,
