@@ -65,6 +65,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     args: [luckyWinner]
   })
 
+  const LandFix = await deploy('LandFix', {
+    from: deployer,
+    log: true,
+    args: [Land.address]
+  })
+
   // MerkleAirdrop
 
   if(await read('MerkleAirdrop', 'smolBrain') != SmolBrain.address) {
@@ -207,6 +213,18 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       CONFIG.SmolBrain.baseURI
     );
   }
+
+  // LandFix
+
+  if(await read('SmolBrain', 'land') != LandFix.address) {
+    await execute(
+      'SmolBrain',
+      { from: deployer, log: true },
+      'setLand',
+      LandFix.address
+    );
+  }
+
 };
 export default func;
 func.tags = ['deployments'];

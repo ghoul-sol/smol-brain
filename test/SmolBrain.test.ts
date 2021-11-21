@@ -6,7 +6,7 @@ const {ethers, deployments, getNamedAccounts} = hre;
 const { deploy } = deployments;
 
 describe('SmolBrain', function () {
-  let land: any, school: any, smolBrain: any, merkleAirdrop: any;
+  let land: any, landfix:any, school: any, smolBrain: any, merkleAirdrop: any;
   let player1: any, player2: any, player3: any, hacker: any, deployer: any;
   let player1Signer: any, player2Signer: any, player3Signer: any, hackerSigner: any, deployerSigner: any;
 
@@ -49,6 +49,13 @@ describe('SmolBrain', function () {
       await ethers.provider.getSigner(deployer)
     );
 
+    const LandFix = await deployments.get('LandFix');
+    landfix = new ethers.Contract(
+      LandFix.address,
+      LandFix.abi,
+      await ethers.provider.getSigner(deployer)
+    );
+
     const MerkleAirdrop = await deployments.get('MerkleAirdrop');
     merkleAirdrop = new ethers.Contract(
       MerkleAirdrop.address,
@@ -76,7 +83,7 @@ describe('SmolBrain', function () {
     });
 
     it('setLand', async function () {
-      expect(await smolBrain.land()).to.be.equal(land.address);
+      expect(await smolBrain.land()).to.be.equal(landfix.address);
       await smolBrain.setLand(deployer)
       expect(await smolBrain.land()).to.be.equal(deployer);
     });

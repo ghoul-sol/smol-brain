@@ -66,6 +66,14 @@ describe('Land', function () {
     expect(await land.balanceOf(player1)).to.be.equal(1);
     expect(await land.ownerOf(0)).to.be.equal(player1);
     expect(await land.totalSupply()).to.be.equal(1);
+
+    const ID = await land.tokenOfOwnerByIndex(player1, 0);
+    await land.connect(player1Signer).transferFrom(player1, player2, ID);
+
+    expect(await land.balanceOf(player1)).to.be.equal(0);
+    expect(await land.balanceOf(player2)).to.be.equal(1);
+    expect(await land.ownerOf(ID)).to.be.equal(player2);
+    expect(await land.totalSupply()).to.be.equal(1);
   });
 
   describe('config', function () {
@@ -186,6 +194,20 @@ describe('Land', function () {
       expect(await smolBrain.averageIQ()).to.be.equal("99999979332010582010");
       const landMaxLevel = await land.landMaxLevel();
       expect(await land.tokenURI(0)).to.be.equal(`ipfs//Land/${landMaxLevel}`);
+    });
+  })
+
+  describe('mint smolbrain with no land', function () {
+    beforeEach(async function () {
+      await smolBrain.grantMinter(deployer);
+      await smolBrain.mintMale(player1);
+    });
+
+    it('transfer without land', async function () {
+      const tokenId = await smolBrain.tokenOfOwnerByIndex(player1, 0);
+      expect(await smolBrain.ownerOf(tokenId)).to.be.equal(player1);
+      await smolBrain.connect(player1Signer).transferFrom(player1, player2, tokenId);
+      expect(await smolBrain.ownerOf(tokenId)).to.be.equal(player2);
     });
   })
 });
