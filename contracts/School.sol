@@ -4,6 +4,7 @@ pragma solidity 0.8.7;
 import '@openzeppelin/contracts/access/Ownable.sol';
 import './SmolBrain.sol';
 
+/// @dev It's where Smols earns IQ points. Think of this contract as farming that does not require any deposits.
 contract School is Ownable {
     uint256 public constant WEEK = 7 days;
     /// @dev 18 decimals
@@ -12,8 +13,10 @@ contract School is Ownable {
     uint256 public totalIqStored;
     /// @dev unix timestamp
     uint256 public lastRewardTimestamp;
+    /// @dev Number of smols currently at school
     uint256 public smolBrainSupply;
 
+    /// @dev SmolBrain NFT contract address
     SmolBrain public smolBrain;
 
     mapping(uint256 => uint256) public timestampJoined;
@@ -33,6 +36,7 @@ contract School is Ownable {
         _;
     }
 
+    /// @dev Updates totalIQ in storage
     modifier updateTotalIQ(bool isJoining) {
         if (smolBrainSupply > 0) {
             totalIqStored = totalIQ();
@@ -42,21 +46,26 @@ contract School is Ownable {
         _;
     }
 
+    /// @dev Returns total IQ earned by all Smols who have evern been to school
     function totalIQ() public view returns (uint256) {
         uint256 timeDelta = block.timestamp - lastRewardTimestamp;
         return totalIqStored + smolBrainSupply * iqPerWeek * timeDelta / WEEK;
     }
 
+    /// @dev Return IQ earned by Smol from last timestamp update
     function iqEarned(uint256 _tokenId) public view returns (uint256 iq) {
         if (timestampJoined[_tokenId] == 0) return 0;
         uint256 timedelta = block.timestamp - timestampJoined[_tokenId];
         iq = iqPerWeek * timedelta / WEEK;
     }
 
+    /// @dev Returns true if Smol is at school
     function isAtSchool(uint256 _tokenId) public view returns (bool) {
         return timestampJoined[_tokenId] > 0;
     }
 
+    /// @dev Owner of Smol can call this to send Smol to school to earn IQ.
+    /// Only owner can call it and it does not require transfer of a token but it make `_tokenId` untransferable.
     function join(uint256 _tokenId)
         external
         onlySmolBrainOwner(_tokenId)
@@ -67,6 +76,7 @@ contract School is Ownable {
         emit JoinSchool(_tokenId);
     }
 
+    /// @dev Owner of Smol can call this to make Smol drop the school and stop earning IQ. This makes `_tokenId` transferable again.
     function drop(uint256 _tokenId)
         external
         onlySmolBrainOwner(_tokenId)
