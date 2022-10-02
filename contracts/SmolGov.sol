@@ -21,21 +21,15 @@ interface ISmolRacing {
 contract SmolGov is ERC20 {
     SmolBrain public smolbrain;
     ISmolFarm public smolfarm;
-    IERC721Enumerable public smolBodies;
-    IGym public smolgym;
     ISmolRacing public smolracing;
 
     constructor(
         address _smolbrain,
         address _smolfarm,
-        address _smolBodies,
-        address _smolgym,
         address _smolracing
     ) ERC20("Smol Governance", "gSMOL") {
         smolbrain = SmolBrain(_smolbrain);
         smolfarm = ISmolFarm(_smolfarm);
-        smolBodies = IERC721Enumerable(_smolBodies);
-        smolgym = IGym(_smolgym);
         smolracing = ISmolRacing(_smolracing);
     }
 
@@ -47,7 +41,6 @@ contract SmolGov is ERC20 {
         return
             getSchoolBalance(_account) +
             getFarmBalance(_account) +
-            getGymBalance(_account) +
             getRacingBalance(_account);
     }
 
@@ -65,16 +58,6 @@ contract SmolGov is ERC20 {
     function getFarmBalance(address _account) public view returns (uint256 balanceAtFarm) {
         uint256[] memory tokensInFarm = smolfarm.tokensOfOwner(address(smolbrain), _account);
         return tokensInFarm.length;
-    }
-
-    function getGymBalance(address _account) public view returns (uint256 balanceAtGym) {
-        uint256 balance = smolBodies.balanceOf(_account);
-        for (uint256 i = 0; i < balance; i++) {
-            uint256 tokenId = smolBodies.tokenOfOwnerByIndex(_account, i);
-            if (smolgym.isAtGym(tokenId)) {
-                balanceAtGym++;
-            }
-        }
     }
 
     function getRacingBalance(address _account) public view returns (uint256 balanceAtRacing) {
