@@ -19,6 +19,8 @@ interface ISmolRacing {
 }
 
 contract SmolGov is ERC20 {
+    address public constant SMOL_CARS = 0xB16966daD2B5a5282b99846B23dcDF8C47b6132C;
+
     SmolBrain public smolbrain;
     ISmolFarm public smolfarm;
     ISmolRacing public smolracing;
@@ -31,6 +33,10 @@ contract SmolGov is ERC20 {
         smolbrain = SmolBrain(_smolbrain);
         smolfarm = ISmolFarm(_smolfarm);
         smolracing = ISmolRacing(_smolracing);
+    }
+
+    function decimals() public view virtual override returns (uint8) {
+        return 0;
     }
 
     function totalSupply() public view override returns (uint256) {
@@ -61,7 +67,7 @@ contract SmolGov is ERC20 {
     }
 
     function getRacingBalance(address _account) public view returns (uint256 balanceAtRacing) {
-        uint256[] memory tokensInRacing = smolracing.smolsOfOwner(address(smolbrain), _account);
+        uint256[] memory tokensInRacing = smolracing.smolsOfOwner(SMOL_CARS, _account);
         return tokensInRacing.length;
     }
 
